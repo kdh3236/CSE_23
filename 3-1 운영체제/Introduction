@@ -1,0 +1,17 @@
+운영체제란?
+  사용자가 컴퓨터에 직접 접근하지 않고 사용을 할 수 있도록 "편리성, 효율성, 자원 할당, 보안, 개별성"을 부여하는 시스템
+  - Course overview 7 ~ 9 페이지의 예시 확인
+
+운영체제는 위 기능을 어떻게 수행할까?
+  "Cheating"
+  - OS is a collection of cheating schemes
+
+Examples of cheating
+  1. Process management: Multitasking 
+    - Cheating by fast and repetitive task switches
+    
+  2. Memory management: Virtual Memory
+    - Cheating by a phantom space provision
+    
+  3. File and Storage management: Fast I/O
+    - Cheating by buffering and caching
