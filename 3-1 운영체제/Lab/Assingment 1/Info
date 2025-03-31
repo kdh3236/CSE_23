@@ -1,0 +1,21 @@
+과제 1: getppid()를 sysproc.c - getpid()와 비슷하게 구현
+
+1. kernel/syscall.c 에 extern uint64 sys_getppid(void); 추가, static uint64 dp [SYS_getppid] sys_getppid, 추가
+
+2. kernel/syscall.h 에 SYS_getppid 22 추가
+
+3. kernel/sysproc.c 에 sys_getppid 구현
+	- proc.h에서 proc struct 구조 확인
+	- *parent에 Parent process 저장되어있는거 확인
+	- getpid()를 보니 myproc() -> pid 이다.
+	- kernel/proc.c 에 있는 myproc() 확인: current struct proc * return  
+
+4. user/user.h 에 getppid() 추가
+
+5. user/usys.pl 에 entry("getppid") 추가
+
+6. user 폴더에 ppid.c 파일 만들기
+	- ppid 라는 명령어가 실행되도록 하기 위함
+
+7. Makefile에 ppid 추가
+	User 영역에 추가 - User level 명령어가 실행될 수 있도록
