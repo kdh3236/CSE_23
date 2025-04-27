@@ -1,0 +1,46 @@
+구현해야하는 부분
+  1. FCFS
+  	  - proc.h에 있는 proc 구조체를 사용	
+  2. MLFQ
+    	- L0 ~ L2 (time quantum = 2i + 1)
+    	- L0부터 시작
+    	- L0, L2는 기본 RR 사용 
+    		- L0 -> L1 -> L2로 이동 및 확인
+    	- L2는 Priority scheduling 
+    		- setpriority 라는 system call이 process의 우선순위를 변경할 수 있게 구현되어야 한다.
+    		- Priority는 0 ~ 3의 값을 가지며, 기본값은 3이고 큰 값이 큰 우선순위를 가진다.
+    		- 같은 Priority를 가지면 아무거나 실행
+    		- L2에 있는 process가 time quantum을 다 사용하면 Priority가 1 감소, 그러나 0보다 작아지진 않는다. Time quantum을 초기화.
+    	- 기아(Starvation) 방지: Priority Boosting 구현
+    	- Global Tick Count가 50이 될 때마다 모든 프로세스를 최고 레벨(L0)로 올려야 한다.
+    	- Scheduling될 때마다 highest queue에서 먼저 찾아야한다.
+  3. Mode Switch
+    기본적으로 first xv6 boot에서는 FCFS를 사용한다.
+    	- 이 경우, Priority boosting 사용하지 않는다.
+    	- mlfqmode system call 이 호출되면 MLFQ로 전환한다.
+    MLFQ mode에서 fcfsmode system call이 호출되면 FCFS mode로 전환한다.
+    Mode switching 시, global tick count = 0으로 초기화한다.	
+    만약 이미 해당 모드를 진행 중에 그 모드로의 변환을 의미하는 system call을 호출하면, "the system already in that mode, and no changes are made" message를 display
+  
+구현해야하는 system call
+    1. void yield(void): Give up current process's own cpu
+    2. int getlev(void): 해당 process가 어느 queue level에 있는 지 return. 만약 현재 system이 FCFS mode이면 99 return.
+    3. int setpriority (int pid, int priority): pid에 맞는 process의 priority 설정
+    	- return 값: 0 - 성공 / 1 - pid에 일치하는 process가 없음 / 2 - priority value가 0 ~ 3 사이에 존재하지 않는 경우
+    4. int mlfqmode(void): FCFS to MLFQ
+    	- L0 queue로 이동 시킴 (FCFS의 상대적 순서는 유지하면서)
+    	- 위 과정에서 각 process의 priority는 3, time quantum 0, level = 0
+    	- return value: 0 - 성공 / -1: 실패 + "no changes are made" 라는 메세지 출력
+    5. int fcfsmode(void): MLFQ to FCFS
+    	- MLFQ에 저장되어있던 방식을 무시하고 creation time에 맞춰 FCFS에 저장됨
+    	- 각 process의 priority, time quantum and level 은 -1로 초기화
+    	- return value: 0 - 성공 / -1: 실패 + "no changes are made" 라는 메세지 출력
+
+Specification  
+    1 tick = 100ms
+    코딩 스타일 = xv6 기본 스타일을 따른다.
+    Single cpu 상황을 가정
+    	- make CPUS = 1 또는 QEMU 실행 시, -smp 1 option 추가
+    유저 프로세스가 이상하게 동작해서 강제 종료시켜야 한다면, 강제 종료를 뜻하는 메세지 출력 후 다른 동작은 발생하면 안 된다. 강제 종료 이후 다음 프로세스를 Scheduling
+
+
