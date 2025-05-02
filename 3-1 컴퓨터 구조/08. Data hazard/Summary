@@ -1,0 +1,32 @@
+Register에서의 Data hazard는 다음 세 가지 종류가 있다.
+  1. WAR
+  2. WAW
+  3. RAW
+
+WAR, WAW는 in-order의 경우에서는 발생하지 않기 때문에, 이 챕터에서는 RAW hazard의 경우만 살펴보자.
+
+RAW hazard는 R/I tpye, lw 명령어에서 use와 produce의 distance가 3만큼 차이나기 떄문에 발생한다.
+  - Pipeline에서는 한 명령어의 WB이 실행되기 전 다른 명령어의 ID 단계가 실행될 수 있기 때문에 Data dependency가 있는 두 명령어 간의 거리가 멀다면 문제가 된다.
+
+해결하는 방법
+  1. Pipeline stall - ID stage
+    - Data dependency가 있다면 해당 read instruction의 ID 단계와 이후 명령어들을 Stall 해버라는 것이다.
+    - Stall을 하기 위해서는 Regwrite = Memwrite = 0으로 만들고, PC, IR latching, ID stage가 disalbled하게 만들어야 한다.
+    - ID 단계에서의 rs / rt가 EX / MEM / WB 단계에서의 reg write dest addr와 같은지 확인하고 regwirte = 1인지 확인해야 한다.
+
+    - stall 이 없으면 ideal IPC = 1
+    - stall이 있으면 IPC = { N / (N + S) }
+
+  2. Data forwarding - EX stage
+    - stall이 너무 길면 IPC 관점에서 성능에 치명적이다.
+    - EX 단계, MEM 단계 등에서 WB은 되지 않았지만 결과값은 미리 준비되었을 때, 해당 결과값을 WB하기 전에 바로 Read 할 수 있도록 한다.
+    - 두 명령어 사이 거리가 1이면 EX/MEM latch에서, 2면 MEM/WB latch, 3이면 register file 내부에서 forwarding 하도록 한다.
+
+    - 이것을 지원하기 위해 Forwarding unit을 사용한다.
+    - EX/MEM latch, MEM/WB latch 에서 reg dest addr와 regwrite 여부를 확인하고 EX stage에서 사용할 수 있도록 한다.
+    - 즉, 이때는 ID 단계에서 previous value를 읽도록 하는 것이다.
+
+    하지만, LW의 경우에는 결과가 MEM 단계에서 나오기 때문에, MEM/WB latch에서의 forwarding만이 가능하다.
+    - 이를 위해 LW delay slot 지원한다. 
+      - delay slot에서는 data dependency가 없는 명령어만 실행되거나(Out of order로 scheduling) stall이 되도록 한다.
+      - 이렇게 하면 원래는 stall을 걸어야하지만, stall이 없었던 것처럼 동작할 수 있다.
