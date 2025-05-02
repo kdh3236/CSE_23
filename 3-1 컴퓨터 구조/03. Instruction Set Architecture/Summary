@@ -1,0 +1,31 @@
+ISA: User가 컴퓨터를 사용해야하는 manual
+  - Data size, format
+  - Programmer visible state (pc, memory, register) 변경
+  - Protection
+  - Software convention 등을 결정한다.
+
+ISA를 만들 때, scability와 compatiblity를 위해 어느 정도 성능을 포기하기도 한다.
+
+Instruction: Programmer visible state를 변경한다.
+  - Memory나 register에서 oprand를 읽어와 연산 및 동작
+  - Register를 사용하는 이유는 Memory 접근은 느려서 모든 operand를 memory에서 가져오면 한 cycle 안에 명령어를 실행하는 것이 힘들기 때문이다. 
+  - 4 byte로, Memory allignment에 의해 Intruction을 저장하고 있는 Memory address의 LSB는 2b'00 이어야 한다.
+
+Memory: Byte Addressing을 사용하고 용량이 큰 저장 공간
+  - Memory allignment가 중요하다!!!
+
+Register: Word Addressing을 사용하고 용량이 작은 저장 공간
+  - 각 register마다 사용되는 용도가 지정이 되어져 있다. 
+  - caller saved, callee saved
+
+Function call 과정
+
+-----caller-----
+1. Argument 저장
+2. Caller saved register 값 저장
+3. return address 저장 (호출한 명령어의 pc값 + 4)
+-----callee-----
+4. old $fp value 저장
+5. callee saved register 값 저장
+6. return value 저장
+7. callee에서 임시로 사용한 값 저장
