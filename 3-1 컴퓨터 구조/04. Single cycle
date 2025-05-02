@@ -1,0 +1,15 @@
+Instruction을 처리하는 5단계
+  1. IF
+  2. ID
+  3. EX
+  4. MEM
+  5. WB
+
+위 5단계가 하나의 cycle 안에 동작해야하고, 모든 명령어를 지원해야 한다.
+  - 각 명령어에 따라 같은 hardware resource가 다르게 동작해야한다.
+  - 이를 위해 control signal을 사용해야 한다.
+
+Performance: CPI = 1
+
+단점: 모든 명령어가 한 cycle안에 동작하도록 구현해야하기 때문에 worst case에(lw) 맞추어 clock cycle을 조절해야 한다. 
+  - 빨리 끝나도 되는 명령어(J, Bxx) 입장에선 비효율적이다.  
