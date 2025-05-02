@@ -1,0 +1,78 @@
+13. single code and load store queue
+
+Memory에 대한 접근도 순서가 중요하다!
+Memory는 동적으로 관리되기 때문에 data hazard 처럼 관리할 수가 없다.
+Out of Order이라고 하더라도 Memory dependency는 유지되어야 한다.
+
+Memory 관리 측면에서는 두 가지가 중요하다.
+  1. Memory address 생성 시 처리
+    - Lw, Sw에서 Memory addr도 결국 register 값을 이용하여 생성한다. 따라서 Memory access address를 생성할 때, Data hazard를 신경 써주어야 한다. 
+    - 이를 위해 RS 내에 load, store 전용 queue를 생성할 수 있다.
+
+    이전 모든 메모리 관련 명령이 수행되고 addr가 계산되는 방식으로는 두 가지가 있다.
+      1. In-order
+        - 전혀 관계없는 Lw 나 Sw가 서로 때문에 대기하게 될 수도 있다.
+      2. Out-order
+        - load queue, store queue를 따로 나누어 각 메모리 명령어가 dependency가 없는 다른 종류의 메모리 명령어 때문에 대기하는 경우를 제거했다. 
+        
+        - 하지만 이 경우에도 서로 dependency가 있는 load, store의 순서는 보장되어야 한다.
+          - 이를 위해 comparison logic을 구현한다.
+          
+        -  그리고 load, store 내에서의 순서는 반드시 보장되어야 한다.
+          - 이는 각 queue가 구현되어 있으므로 보장된다.  
+
+  2. Memory에 접근 시점
+    - 메모리의 접근 순서에 따라 명령어 실행 흐름이 완전히 달라질 수 있다.
+    - 이를 구현하는 세 가지 방법이 존재한다.
+
+      a. Total ordering: 메모리 명령어라면 in-oreder
+        - in-order addr gen 사용
+        - 하나의 통합된 lw, sw queue 사용
+        - lw, sw가 실행되려면 lw, sw queue의 가장 앞에 위치해야 한다.
+
+        - lw 명령어가 queue에 head에 위치할 때, 아무 조건 없이 바로 실행되도록 한다.	
+          - 이 방식에서는 앞선 모든 메모리 명령이 실행되었음이 보장되기 때문에 가능
+          - read는 프로그램 실행에 큰 영향을 미치지 않는다.  
+
+        - sw 명령어는 ROB가 valid 해지면 실행될 수 있도록 한다. 
+          - 메모리 write 순서를 보장해주기 위함이다.
+        
+        - 이 경우, lw와 sw가 다시 전혀 관련없는 lw, sw 때문에 대기하게 된다.
+
+      b. Load ordering / write ordering
+        - 가장 큰 차이점은 lw queue, sw queue를 따로 관리한다는 것이다. 
+        - in-order addr gen 사용
+        
+        - Lw queue는 바로 head에 해당하는 것을 바로 실행하지 않고, cmp를 통해 sw queue에서 lw와 dependency가 있는 lw 명령 이전에 실행 된 sw 명령이 없다면 실행될 수 있도록 한다.
+
+        - sw 명령어는 ROB가 valid 해지면 실행될 수 있도록 한다. 
+          - 메모리 write 순서를 보장해주기 위함이다.
+        
+        - 이 경우, sw를 lw가 무조건 기다려야 한다.
+
+      c. Partial ordering
+        - 가장 큰 차이점은 forwarding이 추가된 것이다.
+        - in-order addr gen 사용
+        - write는 동일하게 동작한다.
+        
+        - lw는 lw queue 맨 앞에 있는 명령어가 sw queue에 있는 명령어와 주소가 동일한 것이 있는지 확인하고, 있다면 forwarding을 이용한다.
+        - 직접 lw가 store이 ROB valid = 1이 아니여서 아직 mem write되지 않아도 바로 값을 읽어와 실행할 수 있도록 하는 것이다.
+
+      단점: Mis-speculation
+        - Partial ordering의 경우에서 out of order addr gen이라면 forwarding으로 잘못된 값을 읽어오는 경우가 생길 수 있다. 이런 경우 잘못된 값으로 다른 모든 명령어들이 실행되게 될 수 있으므로 너무 큰 에러이다.
+
+        이런 경우
+          - FLUSH
+            - 쉽지만 overhead가 너무 크다.
+          - 잘못된 reg를 읽은 명령어 모두 초기화
+            - 구현이 너무 어렵다
+          - Predict
+            - lw - sw 간의 dependency 자체를 예측하게 만들자.
+
+      Store to Store 수정
+        - 기존 방식은 ROB valid = 1이 될 때 까지 이후 sw 명령어가 모두 대기한다. 이런 방식은 비효율적일 수 있다.
+      
+      Merging write buffer
+        - 인접한 주소의 명령어는 인접한 write buffer에 저장해놓고 write buffer가 부족해지는 순간에 low address부터 하나의 block으로 동시에 메모리에 write하자.
+      
+        - 인접한 주소의 명령은 low addr부터 write하면 순서도 보장되고 ROB Valid = 1까지 기다릴 필요도 없다. 
