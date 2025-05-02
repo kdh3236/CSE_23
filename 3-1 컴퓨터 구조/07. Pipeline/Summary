@@ -1,0 +1,25 @@
+Multi cycle을 보면, 특정 stage를 수행할 때 Hardware에서 사용되지 않는 부분이 생겨나고 CPI가 커지게 된다.
+
+이를 해결하기 위한 방법이 Pipeline이다.
+  - 한 명령어의 특정 stage가 실행될 때, 다른 명령어의 특정 stage가 실행되도록 하자.
+  - Single cycle의 hardware를 생각하면 충분히 가능한 이야기이다!
+    - 즉, multi cycle에서처럼 hardware resource sharing은 불가능하다.
+  - 단 한 cycle 내에서 다른 명령어들이 실행되고 있는 것들이기 때문에 single cycle에서와 다르게 주의할 부분이 있다. 
+
+Pipelining을 하면 뭐가 좋냐?
+  - Bandwidth의 증가 (T: 하나의 명령어를 실행하는데 걸리는 전체 시간, s = 부가적으로 걸리는 시간, 저장 시간 등) 
+  - multi cycle: 1개의 명령어를 처리하는데 걸리는 시간 = 1 / (T + s) 
+  - k - pipeline: 1개의 명령어를 처리하는데 걸리는 시간 = 1 / (T/k + s) 
+
+  - 그러나 k stage로 나누게 되면 각 단계마다 gate cost가 생겨난다. 
+  - 따라서 무한정으로 stage를 늘리기는 어렵다.
+
+중요) 
+하나의 명령어에서 한 stage가 끝나서 다음 stage로 넘어가면, 이전 stage는 다른 명령어의 실행으로 덮여쓰여진다.
+  - 이 때문에 각 stage마다 해당 명령어의 데이터를 저장하기 위한 Latch가 필요하다.
+
+Control signal도 각 hardware resource마다 다른 명령어의 다른 stage가 실행이 되고 있기에 알맞게 세팅되어야 한다.
+  - 추가로, control signal 생성하는 것은 ID 단계이기 때문에 ID 단계에서 해당 명령어에 대한 EX, MEM, WB에 대한 control signal을 latch를 통해 계속 전달해야 한다.
+
+  - 이것은 Area, Energy 측면에서 단점이 존재한다.
+
