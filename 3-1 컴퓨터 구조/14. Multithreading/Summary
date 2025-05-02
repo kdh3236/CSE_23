@@ -1,0 +1,107 @@
+Multithreading
+
+기존 superscalar 방식으로는 cpu utilization이 너무 낮다.
+  - ALU unit 처리, Branch misprediction 등으로 인해 stall이 걸리면 일부 pipeline은 실행할 명령어가 없어 실행되지 못 한다.
+  - CPU utilization: (실제 사용하는 IPC) / (peak IPC)
+
+CPU utilization이 작은 문제를 multithreading을 이용하여 해결해보자.
+  - 멀티스레딩의 본질은 pipeline stall을 스레드 스위칭으로 감춤으로써 CPU utilization을 높이려는 전략이다.
+
+Thread란?
+  - Register file, memory를 독립적으로 갖는 실행 단위 (Instruction stream)
+  - context: Register file은 특별히 thread의 context라고도 한다.
+  - Thread는 전혀 다른 프로그램끼리의 동작이 될 수도 있고, 같은 프로그램 내에서의 다른 동작 단위를 나타낼 수도 있다.
+
+Computer가 thread를 지원하는 방법은 크게 두 가지가 있다.
+  1. SW: 전통적인 방식
+    - cpu가 context switch를 통해 한 thread에서 다른 thread로 넘어간다.
+    - context switch는 overhead를 동반한다.
+    
+  2. HW - 현대에 많이 사용하는 방식
+    - Hardware에서 애초에 각 thread의 Register file를 가지고, 유지하는 방식
+    - 추가적인 resource가 필요하다는 단점이 있다.
+
+Multithreading은 그 자체로 동반하는 문제점이 있다.
+  - Multithreading을 하게 되면, 하나의 cpu가 각 thread를 나누어 쓴다고 생각할 수 있다.
+  - 이런 경우, 하나의 thread 관점에서 성능이 떨어지며, latency가 늘어난다.
+
+그럼에도 Multithreading을 사용하는 이유는, 전체적인 관점에서는 (여러 thread를 동시에 실행할 때의 latency) latency가 감소하기 떄문이다.
+
+Thread의 동작 방식은 크게 두 가지로 나뉜다.
+1. Time sharing: 한 번에 하나의 thread만 실행하도록 한다.
+  a. Coarse-grain multithreading (CGMT)
+    - 한 번에 하나의 thread만 실행하고, long latency가 (ex. L2 cache miss) 발생하는 경우에만 다른 thread를 실행할 수 있도록 한다.
+    
+      - 기본 동작은  original thread -> long letency -> new thread -> long leetency 해결 -> original thread 
+      
+      - 해당 thread가 즉시 실행되지 못 하는 상황에서 cpu를 놀게 하는 것이 아니라, 다른 thread를 가지고 와서 실행하도록 해 cpu utilization을 높인다.
+      
+      - Short latency에 대해 context switch를 지원하면, 오히려 손해이다.
+        - context switch가 일어날 때, 기존 pipeline에 존재하는 명령어는 모두 flush 해야한다.
+        - 그렇다면 original thread -> new thread -> original thread 과정에서 두 번의 pipeline depth 만큼의 stall이 필요하게 된다.
+        - 두 번의 pipeline depth 만큼의 stall cycle > short latency면 비효율적이다.
+        
+    - 실제로 하나의 Thread만 실행되는 것이기 때문에 single thread를 실행할 때의 latency는 크게 줄어들지 않는다.
+    
+    - 하지만, short latency를 지원하지 못 한다는 단점이 존재한다.
+
+2, Space sharing: 여러 thread를 동시에 실행할 수 있도록 하나의 thread에 할당되던 공간을 나누자.
+  a. Fine-grain multithreading (FGMT)
+    - 하나의 pipeline에서 각 pipeline stage마다 다른 thread가 실행될 수 있도록 한다.
+    
+    - 여러 thread를 한 번에 hardware에 올려놔 context switch 대신 서로 다른 thread를 각 stage에서 선택할 수 있도록 한다.
+    
+    - 구조가 엄청나게 단순화 된다는 장점이 있다.
+      - 10 pipeline stage에서 10개의 thread가 하나의 명령어를 가질 때, OoO, Branch prediction, flush, switch 등 어느 것도 신경쓰지 않아도 된다.
+
+  b. Simultaneous multithreading (SMT)
+    - superscalar 방식을 이용하여 thread shceduler가 선택한 것에 따라 여러 thraed가 같은 stage에서 병렬적으로 실행되거나 하나의 pipeline 내의 다른 stage에서 실행될 수 있도록 한다.
+      - 각 thread가 map table과 physical register file을 가져야한다.
+      - map table: 여러 thread에서 각 thread가 가지는 register name이 다른 thread의 register name 중복될 수 있다. 이때 physical register file과 매핑한다.
+    
+    - Long latency와 short latency를 모두 지원 가능하다. 
+      -  어떠한 latency가 발생하던지 그 thread를 그냥 사용하지 않고, 다른 thread를 실행하도록 하면 된다.
+    - Out of Order 상황에서도 잘 동작해 병렬성이 높다.
+    
+    - 하지만 single thread latency가 증가한다.
+      - 하나의 cpu를 실제로 여러 thread가 공유하기 때문이다.
+      
+    - Thread scheduling은 Round Robin 방식을 이용하고, pipeline partitioning은 유동적으로 하는 등 구현이 복잡하다.
+
+SMT가 가장 좋아보이지만, 여러 potential issue가 존재한다.
+  1. 각 thread가 stall 되는 등, fetch할 thread가 없다면 cpu가 낭비된다.
+
+  2. 여러 thread가 cache를 공유하게 된다.
+    - cache miss가 증가하게 된다.
+
+  3. 여러 thread가 BTB, PHT를 공유하게 된다.
+    - 한 thread에서 branch prediction을 할 때, 전혀 다른 thread에 의해 생긴 branch prediction 결과를 사용하게 될 수도 있다.
+
+  4. Large map table & physical register files
+    - #phys-regs = (#thread * #architecture-reg) + in-flight instructions
+
+  5. ROB, RS, CACHE가 Partitioned 되어야 한다.
+    a. Static partitioning
+      - 각 thread마다 일정 공간을 미리 할당
+      - 특정 thread가 idle 상태일 경우 해당 공간도 쉬게 된다.
+      - 각 thread가 특정 영역을 반드시 할당 받는다는 점에서 Fairness!
+      
+    b. Dynamic partitioning
+      - 상황에 맞추어 공간을 할당
+      - 특정 thread가 idle 상태일 경우 공간이 할당되지 않고, 많이 실행되는 thread일수록 많은 공간이 할당된다.
+      - 적게 실행되는 thread는 무조건 적은 공간을 할당 받게되는 Fairness 문제가 발생한다.
+        - 이런 경우 특정 공간을 #in-flight instruction이 적은 thread에 할당하는 방식으로 해결한다.
+
+Chip Multithreading (CMT)
+  - SMT처럼 single core 안에서 여러 thread가 실행되는 대신, 여러 코어를 가지고 각 코어가 독립적인 pipeline과 execution unit을 가져 하나의 thread를 실행할 수 있도록 만든 것.
+  - 여러 코어를 묶어 하나의 칩으로 만든다.
+
+SMT vs CMT
+  - SMT는 하나의 pipeline을 크고 복잡하게 만들고, CMT는 각 core에서 multiple seperate pipeline을 가진다.
+  - CMP는 clock time이 빠르다.
+  - SMT가 single thread인 경우 IPC가 훨씬 크다. 
+    - 하나의 pipeline에서 모두 처리되기 떄문이다. 
+  - modern cpu는 둘 다 사용한다.
+    - 각 core에서 2개의 thread가 동작하는 multiple cores
+
+하지만 데이터 양이 방대해짐에 따라, memory에서 데이터를 가져오는 단위 자체가(Bandwidth) 중요해저 SMT를 점차 사용하지 않고 있다.
