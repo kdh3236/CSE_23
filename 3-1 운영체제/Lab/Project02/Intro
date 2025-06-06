@@ -1,1 +1,7 @@
 기존 xv6를 thread-aware하게 만드는 프로젝트
+
+기존 fork(), exec() 코드를 참고하여 thread_create() 
+기존 wait() 코드 참고하여 thread_wait()
+
+기존 xv6가 process만을 지원하기 떄문에 thread를 지원하도록 기존 System call 함수 일부를 수정해야 한다.
+thread를 관리하는 새로운 구조체를 만드는 방식으로 구현하면 수정해야할 부분이 너무 많아 기존 Process 구조체에 field만 추가하여 구현하였다.
