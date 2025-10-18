@@ -24,4 +24,10 @@ Machine Learning이란?
 
 Computer가 Data를 이용하여 특정 Task를 하는 방법을 배우는 과정이다. 배움의 정도를 P를 통해 검증할 수 있다.
 
-- Task는 Function이다.
+- Task는 Function H (Hypothesis)를 배우는 것이다.
+- Performance measure P: Posterior이다.
+- Prior와 Data를 기반으로 가장 좋은 Hypothesis를 알아내는 방법에 MAP를 사용한다.
+    - Data에 Data가 표현하지 못 하는 Noise가 끼어있어 Hypothesis가 Gaussian distribution 형태를 띈다. MAP를 사용하는 이유는 이 분포에서 가장 좋은 값을 찾기 위함이다.
+ 
+ML은 Bayesianist 관점에서 말도 안되는 것이다.
+- ML은 Prior가 존재하지 않는 MAP이며, 이 경우에는 Data만을 가장 잘 설명하는 Hypothesis를 찾는 것으로 생각하면 된다.
