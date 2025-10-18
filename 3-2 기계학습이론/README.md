@@ -1,3 +1,9 @@
+2025-1학기 수강
+
+**Instructor**: 한양대학교 이성윤 교수님
+
+____
+
 1. AI의 한 축은 **인간 지능을 모방**하는 것이다.
 
 2. 인간 지능이 만드는 입력→출력 매핑은 **매우 복잡한 비선형 함수**로 볼 수 있다.
@@ -11,3 +17,11 @@
     - Matrix는 Linear function이다.
   
 6. Matrix를 다루기 위해 **Linear algebra**도 필요하다. 
+
+___
+
+Machine Learning이란?
+
+Computer가 Data를 이용하여 특정 Task를 하는 방법을 배우는 과정이다. 배움의 정도를 P를 통해 검증할 수 있다.
+
+- Task는 Function이다.
