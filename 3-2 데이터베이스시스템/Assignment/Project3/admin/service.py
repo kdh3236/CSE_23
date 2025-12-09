@@ -17,10 +17,29 @@ def check_admin_id(admin_id: int) -> bool:
     connection.close()
 
     return result is not None
-    
 
-def add_customer_info(info: tuple) -> bool:
+def count_customer(admin_id: int) -> bool:
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    sql = """
+    SELECT COUNT(*)
+    FROM customer
+    WHERE Supervision_id = %s
+    """     
+
+    cursor.execute(sql, (admin_id, ))
+    count = cursor.fetchone()[0]
+
+    if count >= 10: return False
+    else: return True
+
+def add_customer_info(admin_id: int, info: tuple) -> bool:
     # info = (fname, lname, phone_number, supervision_id, rrn)
+    if not count_customer(admin_id):
+        print("한 직원은 최대 10명의 고객만 담당할 수 있습니다.")
+        return False
+
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -31,19 +50,15 @@ def add_customer_info(info: tuple) -> bool:
     VALUES (%s, %s, %s, %s, %s)
     """
     
-    try:
-        cursor.execute(sql, (fname, lname, phone_num, supervision_id, rrn))
-        connection.commit()
+    cursor.execute(sql, (fname, lname, phone_num, supervision_id, rrn))
+    connection.commit()
+        
+    result = cursor.rowcount == 1
 
-        return True
+    cursor.close()
+    connection.close()
     
-    except  Exception as e:
-        print("한 관리자는 최대 10명의 고객만 관리할 수 있습니다.", end='\n\n')
-        return False
-
-    finally:
-        cursor.close()
-        connection.close()
+    return result
 
 
 def delete_customer_info(admin_id:int , customer_id: int) -> bool:
@@ -107,9 +122,28 @@ def delete_customer_info(admin_id:int , customer_id: int) -> bool:
         cursor.close()
         connection.close()
 
+def count_account(customer_id: int) -> bool:
+    connection = get_connection()
+    cursor = connection.cursor()
 
-def create_account(admin_id: int, customer_id: int):
+    sql = """
+    SELECT COUNT(*)
+    FROM account
+    WHERE User_id = %s
+    """
+
+    cursor.execute(sql, (customer_id, ))
+    count = cursor.fetchone()[0]
+
+    if count >= 10: return False
+    else: return True
+
+def create_account(admin_id: int, customer_id: int) -> bool:
     # 계좌 상태 -> Open
+    if not count_account(customer_id):
+        print("한 사용자는 10개의 사용 계좌만 보유할 수 있습니다.")
+        return False
+    
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -118,19 +152,15 @@ def create_account(admin_id: int, customer_id: int):
     VALUES (%s, %s)
     """
 
-    try:
-        cursor.execute(sql, (customer_id, admin_id))
-        connection.commit()
+    cursor.execute(sql, (customer_id, admin_id))
+    connection.commit()
 
-        return True
-    
-    except  Exception as e:
-        print("한 사용자는 최대 10개의 계좌만 보유할 수 있습니다.", end='\n\n')
-        return False
+    result = cursor.rowcount == 1
 
-    finally:
-        cursor.close()
-        connection.close()
+    cursor.close()
+    connection.close()
+
+    return result
 
 def delete_account(account_num: int, admin_id:int , customer_id: int) -> bool:
     connection = get_connection()
@@ -262,7 +292,6 @@ def unfreeze_account(account_num: int, admin_id:int , customer_id: int) -> bool:
     계좌 관리자가 Admin_id와 일치하는지 확인
     계좌의 상태가 'STOP'인지 확인
     """
-
     connection = get_connection()
     cursor = connection.cursor()
 

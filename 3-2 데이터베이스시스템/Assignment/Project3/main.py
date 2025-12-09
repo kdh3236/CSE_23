@@ -75,7 +75,7 @@ def create_customer_info_(admin_id):
     rrn = input("고객의 주민 번호를 공백 없이 입력하세요: ")
 
     info = (fname, lname, phone_num, supervision_id, rrn)
-    result = add_customer_info(info)
+    result = add_customer_info(admin_id, info)
 
     if result: print("[완료] 고객 정보가 추가되었습니다.", end='\n\n')
     else: print("[에러] 고객 정보가 추가되지 않았습니다. 다시 시도해주세요.", end='\n\n')

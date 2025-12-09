@@ -152,10 +152,12 @@ def withdraw(customer_id: int, from_acc: int, amount: int) -> bool:
     cursor.execute(acc_sql, (amount, from_acc, amount))
     if cursor.rowcount == 0:
         print("[에러] 요구하신 계좌를 찾을 수 없거나 잔액이 부족합니다.")
+
         tr_sql = """
         INSERT INTO transaction (From_account_id, Type, Amount, State)
-        VALUES (%s, 'WITHDRAW', %s, 'REJECTED')
+        VALUES (%s, 'TRANSFER', %s, 'REJECTED')
         """
+
         cursor.execute(tr_sql, (from_acc, amount))
         if cursor.rowcount == 0:
             print("[에러] 거래 내역 저장에 실패하였습니다.")
@@ -163,6 +165,7 @@ def withdraw(customer_id: int, from_acc: int, amount: int) -> bool:
             cursor.close()
             connection.close()
             return False
+    
         connection.commit()
 
         cursor.close()
@@ -208,22 +211,7 @@ def transfer(customer_id: int, from_acc: int, to_acc: int, amount: int) -> bool:
     cursor.execute(acc_sql, (from_acc, to_acc, amount, amount, amount))
     if cursor.rowcount == 0:
         print("[에러] 요구하신 계좌를 찾을 수 없거나 잔액이 부족합니다.")
-
-        tr_sql = """
-        INSERT INTO transaction (From_account_id, To_account_id, Type, Amount, State)
-        VALUES (%s, %s, 'TRANSFER', %s, 'REJECTED')
-        """
-
-        cursor.execute(tr_sql, (from_acc, to_acc, amount))
-        if cursor.rowcount == 0:
-            print("[에러] 거래 내역 저장에 실패하였습니다.")
-            connection.rollback()
-            cursor.close()
-            connection.close()
-            return False
-    
-        connection.commit()
-
+        # 수정
         cursor.close()
         connection.close()
 
